@@ -11,21 +11,21 @@ namespace Markdown
 
 	struct Segment
 	{
-		public int beginIndex;
-		public int endIndex;
+		public int BeginIndex;
+		public int EndIndex;
 
 		public Segment(int begin, int end)
 		{
-			beginIndex = begin;
-			endIndex = end;
+			BeginIndex = begin;
+			EndIndex = end;
 		}
 	}
 
 	class Parser
 	{
 		private readonly List<char> specialSymbols;
-		private Dictionary<BlockInformation, int> currentOpenTags;
-		private Dictionary<BlockInformation, List<Segment>> segmentOfTags;
+		private readonly Dictionary<BlockInformation, int> currentOpenTags;
+		private readonly Dictionary<BlockInformation, List<Segment>> segmentOfTags;
 
 		public Parser()
 		{
@@ -89,17 +89,46 @@ namespace Markdown
 			var parseLine = new StringBuilder();
 			for (var i = 0; i < line.Length; i++)
 			{
-				if (IsStartSingleUnderlineBlock(line, i) &&
-					currentOpenTags[BlockInformation.BlockWithSingleUnderline] != -1)
-					currentOpenTags[BlockInformation.BlockWithSingleUnderline] = i;
-				if (IsEndSingleUnderline(line, i))
+				if (IsEndSingleUnderline(line, i) &&
+				    currentOpenTags[BlockInformation.BlockWithSingleUnderline] != -1)
 				{
 					var ind = currentOpenTags[BlockInformation.BlockWithSingleUnderline];
-					segmentOfTags[BlockInformation.BlockWithSingleUnderline].
-						Add(new Segment(ind, i));
+					currentOpenTags[BlockInformation.BlockWithSingleUnderline] = -1;
+					segmentOfTags[BlockInformation.BlockWithSingleUnderline].Add(new Segment(ind, i));
+				}
+				else
+				{
+					if (IsStartSingleUnderlineBlock(line, i) &&
+					    currentOpenTags[BlockInformation.BlockWithSingleUnderline] == -1)
+					{
+						currentOpenTags[BlockInformation.BlockWithSingleUnderline] = i;
+					}
 				}
 			}
-				
+
+			var index = 0;
+			
+			for (var i = 0; i < line.Length; i++)
+			{
+				if (index < segmentOfTags[BlockInformation.BlockWithSingleUnderline].Count)
+				{
+					if (segmentOfTags[BlockInformation.BlockWithSingleUnderline][index].
+						BeginIndex == i)
+					{
+						parseLine.Append("<em>");
+						continue;
+					}
+					if (segmentOfTags[BlockInformation.BlockWithSingleUnderline][index].
+						    EndIndex == i)
+					{
+						parseLine.Append("<//em>");
+						index++;
+						continue;
+					}
+				}
+				parseLine.Append(line[i]);
+			}
+			return parseLine.ToString();
 		}
 	}
 }
