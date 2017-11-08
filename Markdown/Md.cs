@@ -6,7 +6,9 @@ namespace Markdown
 	{
 		public string RenderToHtml(string markdown)
 		{
-			return markdown; //TODO
+			var parser = new Parser();
+
+			return parser.; 
 		}
 	}
 
