@@ -1,48 +1,29 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Markdown
 {
-	enum BlockInformation
-	{
-		BlockWithSingleUnderline,
-		BlockWithDoubleUnderline,
-		ShieldedBlock
-	}
-
-	struct Segment
-	{
-		public int BeginIndex;
-		public int EndIndex;
-
-		public Segment(int begin, int end)
-		{
-			BeginIndex = begin;
-			EndIndex = end;
-		}
-	}
-
 	class Parser
 	{
 		private readonly List<char> specialSymbols;
-		private readonly Dictionary<BlockInformation, int> currentOpenTags;
-		private readonly Dictionary<BlockInformation, List<Segment>> segmentOfTags;
-
+		private readonly Dictionary<TypeOfTag, int> currentOpenTags;
+		private readonly Dictionary<TypeOfTag, List<Segment>> segmentOfTags;
 
 		public Parser()
 		{
-			currentOpenTags = new Dictionary<BlockInformation, int>
+			currentOpenTags = new Dictionary<TypeOfTag, int>
 			{
-				{BlockInformation.BlockWithSingleUnderline, -1},
-				{BlockInformation.BlockWithDoubleUnderline, -1}
+				{TypeOfTag.Em, -1},
+				{TypeOfTag.Strong, -1}
 			};
 
 
-			segmentOfTags = new Dictionary<BlockInformation, List<Segment>>
+			segmentOfTags = new Dictionary<TypeOfTag, List<Segment>>
 			{
-				{BlockInformation.BlockWithSingleUnderline, new List<Segment>()},
-				{BlockInformation.BlockWithDoubleUnderline, new List<Segment>()},
-				{BlockInformation.ShieldedBlock, new List<Segment>()}
+				{TypeOfTag.Em, new List<Segment>()},
+				{TypeOfTag.Strong, new List<Segment>()},
+				{TypeOfTag.ShieldedBlock, new List<Segment>()}
 			};
 
 			specialSymbols = new List<char>
@@ -57,7 +38,7 @@ namespace Markdown
 				return false;
 			if (!specialSymbols.Contains(line[pos]))
 				return false;
-			return line[pos] == '\\';
+			return line[pos - 1] == '\\';
 		}
 
 		public bool IsCharAtPosition(string line, int pos, char c)
@@ -103,81 +84,119 @@ namespace Markdown
 		public bool IsEndDoubleUnderline(string line, int pos)
 		{
 			return IsDoubleUnderline(line, pos) &&
-			       !IsCharAtPosition(line, pos + 2, ' ');
+			       !IsCharAtPosition(line, pos - 1, ' ');
 		}
+
+		public bool IsOnlyDoubleUnderline(string line, int pos)
+		{
+			return IsDoubleUnderline(line, pos) &&
+			       !IsCharAtPosition(line, pos + 2, '_') &&
+			       !IsCharAtPosition(line, pos - 1, '_');
+		}
+
 		public string Parse(string line)
 		{
 			var parseLine = new StringBuilder();
 			for (var i = 0; i < line.Length; i++)
 			{
+				if (line[i] == '_' && IsShielded(line, i))
+				{
+					segmentOfTags[TypeOfTag.ShieldedBlock].Add(new Segment(i - 1, i - 1));
+					continue;
+				}
+
+				
+				if (IsEndDoubleUnderline(line, i) &&
+				    currentOpenTags[TypeOfTag.Strong] != -1)
+				{
+					var ind = currentOpenTags[TypeOfTag.Strong];
+					currentOpenTags[TypeOfTag.Strong] = -1;
+					segmentOfTags[TypeOfTag.Strong].Add(new Segment(ind, i));
+					i++;
+					continue;
+				}
+
+				if (IsBeginDoubleUnderline(line, i) &&
+				    currentOpenTags[TypeOfTag.Strong] == -1)
+				{
+					currentOpenTags[TypeOfTag.Strong] = i;
+					i++;
+					continue;
+				}
+
+				if (IsOnlyDoubleUnderline(line, i))
+					continue;
 
 				if (IsEndSingleUnderline(line, i) &&
-				    currentOpenTags[BlockInformation.BlockWithSingleUnderline] != -1)
+				    currentOpenTags[TypeOfTag.Em] != -1)
 				{
-					var ind = currentOpenTags[BlockInformation.BlockWithSingleUnderline];
-					currentOpenTags[BlockInformation.BlockWithSingleUnderline] = -1;
-					segmentOfTags[BlockInformation.BlockWithSingleUnderline].Add(new Segment(ind, i));
+					var ind = currentOpenTags[TypeOfTag.Em];
+					currentOpenTags[TypeOfTag.Em] = -1;
+					segmentOfTags[TypeOfTag.Em].Add(new Segment(ind, i));
 					continue;
 				}
 
-				if (IsEndDoubleUnderline(line, i) &&
-				    currentOpenTags[BlockInformation.BlockWithDoubleUnderline] != -1)
-				{
-					var ind = currentOpenTags[BlockInformation.BlockWithDoubleUnderline];
-					currentOpenTags[BlockInformation.BlockWithDoubleUnderline] = -1;
-					segmentOfTags[BlockInformation.BlockWithDoubleUnderline].Add(new Segment(ind, i));
-					i++;
-					continue;
-				}
-
-				if (IsDoubleUnderline(line, i) &&
-				    currentOpenTags[BlockInformation.BlockWithDoubleUnderline] == -1)
-				{
-					currentOpenTags[BlockInformation.BlockWithDoubleUnderline] = i;
-					i++;
-					continue;
-				}
+				
 
 				if (IsStartSingleUnderlineBlock(line, i) &&
-					currentOpenTags[BlockInformation.BlockWithSingleUnderline] == -1)
+					currentOpenTags[TypeOfTag.Em] == -1)
 				{
-					currentOpenTags[BlockInformation.BlockWithSingleUnderline] = i;
+					currentOpenTags[TypeOfTag.Em] = i;
 				}
 
 				
 			}
 
+
 			var index = 0;
 			var index1 = 0;
+			var index2 = 0;
+			var isStartSingleTags = false;
 			for (var i = 0; i < line.Length; i++)
 			{
-				if (index < segmentOfTags[BlockInformation.BlockWithSingleUnderline].Count)
+				if (index2 < segmentOfTags[TypeOfTag.ShieldedBlock].Count)
 				{
-					if (segmentOfTags[BlockInformation.BlockWithSingleUnderline][index].
+					if (segmentOfTags[TypeOfTag.ShieldedBlock][index2].BeginIndex == i)
+					{
+						index2++;
+						continue;
+					}
+				}
+				if (index < segmentOfTags[TypeOfTag.Em].Count)
+				{
+					if (segmentOfTags[TypeOfTag.Em][index].
 						    BeginIndex == i)
 					{
+						isStartSingleTags = true;
 						parseLine.Append("<em>");
 						continue;
 					}
-					if (segmentOfTags[BlockInformation.BlockWithSingleUnderline][index].
+					if (segmentOfTags[TypeOfTag.Em][index].
 						    EndIndex == i)
 					{
-						parseLine.Append("<//em>");
+						isStartSingleTags = false;
+						parseLine.Append("</em>");
 						index++;
 						continue;
 					}
 				}
-				if (index1 < segmentOfTags[BlockInformation.BlockWithDoubleUnderline].Count)
+				if (index1 < segmentOfTags[TypeOfTag.Strong].Count)
 				{
-					if (segmentOfTags[BlockInformation.BlockWithDoubleUnderline][index1].BeginIndex == i)
+					if (segmentOfTags[TypeOfTag.Strong][index1].BeginIndex == i)
 					{
+						if (isStartSingleTags)
+						{
+							index1++;
+							parseLine.Append(line[i]);
+							continue;
+						}
 						parseLine.Append("<strong>");
 						i++;
 						continue;
 					}
-					if (segmentOfTags[BlockInformation.BlockWithDoubleUnderline][index1].EndIndex == i)
+					if (segmentOfTags[TypeOfTag.Strong][index1].EndIndex == i)
 					{
-						parseLine.Append("<//strong>");
+						parseLine.Append("</strong>");
 						index1++;
 						i++;
 						continue;
