@@ -28,13 +28,6 @@ namespace Markdown
 		[TestCase("_a __a__ a", "_a <strong>a</strong> a")]
 		[TestCase("_a __a__ __a__ a", "_a <strong>a</strong> <strong>a</strong> a")]
 		[TestCase("_9dw_a__a__", "_9dw_a<strong>a</strong>")]
-
-		public void TestRenderToNtml_WithSigleUndergraund(string input, string output)
-		{
-			var md = new Md();
-			md.RenderToHtml(input).Should().Be(output);
-		}
-
 		[TestCase("__", "__")]
 		[TestCase("asd", "asd")]
 		[TestCase("a a", "a a")]
@@ -51,7 +44,7 @@ namespace Markdown
 		[TestCase("\\_\\_", "__")]
 		[TestCase("_\\_\\__", "<em>__</em>")]
 		[TestCase("__непарные _символы", "__непарные _символы")]
-		public void TestRenderToHtml_WithDoubleUndergraund(string input, string output)
+		public void TestRenderToHtml_WithUndergraund(string input, string output)
 		{
 			var md = new Md();
 			md.RenderToHtml(input).Should().Be(output);
