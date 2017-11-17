@@ -8,10 +8,7 @@ namespace Markdown
 		public string RenderToHtml(string markdown)
 		{
 			var parser = new ParserForUnderline();
-			parser.UpdateStringByShieldedUnderline(markdown);
-			parser.UpdateStringByDoubleUnderline(markdown);
-			parser.UpdateStringBySingleUnderline(markdown);
-			return parser.GetString(markdown); 
+			return parser.GetHtmlTextFromMdText(markdown); 
 		}
 	}
 
@@ -44,7 +41,7 @@ namespace Markdown
 		[TestCase("\\_\\_", "__")]
 		[TestCase("_\\_\\__", "<em>__</em>")]
 		[TestCase("__непарные _символы", "__непарные _символы")]
-		public void TestRenderToHtml_WithUndergraund(string input, string output)
+		public void TestRenderToHtml_WithUnderline(string input, string output)
 		{
 			var md = new Md();
 			md.RenderToHtml(input).Should().Be(output);

@@ -55,6 +55,9 @@
     <Compile Include="Md.cs" />
     <Compile Include="ParserForUnderline.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Segment.cs" />
+    <Compile Include="Tags.cs" />
+    <Compile Include="ValidatorForTags.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
