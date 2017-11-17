@@ -12,7 +12,7 @@ namespace Markdown
 	internal class ValidatorForTags
 	{
 
-		public static bool IsShielded(string line, int pos)
+		public static bool IsEscaped(string line, int pos)
 		{
 			if (pos == 0)
 				return false;
@@ -60,7 +60,7 @@ namespace Markdown
 		public static bool IsOnlyDoubleUnderline(string line, int pos, bool[] usedChar)
 		{
 			return line[pos] == '_' &&
-			       !IsShielded(line, pos) &&
+			       !IsEscaped(line, pos) &&
 			       IsNotUsedCharAtPosition(line, pos + 1, '_', usedChar) &&
 			       !IsNotUsedCharAtPosition(line, pos + 2, '_', usedChar) &&
 			       !IsNotUsedCharAtPosition(line, pos - 1, '_', usedChar);
@@ -69,7 +69,7 @@ namespace Markdown
 		public static bool IsOnlySingleUnderline(string line, int pos, bool[] usedChar)
 		{
 			return line[pos] == '_' &&
-			       !IsShielded(line, pos) &&
+			       !IsEscaped(line, pos) &&
 			       !IsNotUsedCharAtPosition(line, pos + 1, '_', usedChar) &&
 			       !IsNotUsedCharAtPosition(line, pos - 1, '_', usedChar);
 		}

@@ -7,7 +7,7 @@ namespace Markdown
 	{
 		public string RenderToHtml(string markdown)
 		{
-			var parser = new ParserForUnderline();
+			var parser = new ParserForUnderline(markdown);
 			return parser.GetHtmlTextFromMdText(markdown); 
 		}
 	}

@@ -21,10 +21,11 @@ namespace Markdown
 			{TypeOfTag.ShieldedBlock, new Tags("", "", 0, false)}
 		};
 
-		private readonly bool[] usedChar = new bool[10000];
+		private readonly bool[] usedChar;
 
-		public ParserForUnderline()
+		public ParserForUnderline(string line)
 		{
+			usedChar = new bool[line.Length];
 			currentOpenTags = new Dictionary<TypeOfTag, int>();
 			foreach (var tag in Enum.GetNames(typeof(TypeOfTag)))
 			{
@@ -76,7 +77,7 @@ namespace Markdown
 		{
 			for (var i = 0; i < line.Length; i++)
 			{
-				if (line[i] != '_' || !ValidatorForTags.IsShielded(line, i))
+				if (line[i] != '_' || !ValidatorForTags.IsEscaped(line, i))
 					continue;
 				segmentOfTags[TypeOfTag.ShieldedBlock].
 					Add(new Segment(i - 1, i - 1));
