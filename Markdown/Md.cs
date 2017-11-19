@@ -9,18 +9,19 @@ namespace Markdown
 	{
 		public string RenderToHtml(string markdown)
 		{
-			var stringSeparators = new []{"<br>", "\n"};
+			var stringSeparators = new []{"\n"};
 			var paragraphsOfMarkdown = markdown.Split(stringSeparators, 
 				StringSplitOptions.None);
 
 			var arrayOfParagraphs = new StringBuilder();
+			
 			
 			for (var i = 0; i < paragraphsOfMarkdown.Length; i++)
 			{
 				var partOfMarkdown = paragraphsOfMarkdown[i];
 
 				var parser = new ParserForUnderline(partOfMarkdown);
-				arrayOfParagraphs.Append(parser.GetHtmlTextFromMdText(partOfMarkdown));
+				arrayOfParagraphs.Append(parser.GetHtmlTextFromMdText());
 
 				if (i < paragraphsOfMarkdown.Length - 1)
 					arrayOfParagraphs.Append("<br>");

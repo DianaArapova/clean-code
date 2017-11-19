@@ -6,6 +6,7 @@ namespace Markdown
 {
 	internal class ParserForUnderline
 	{
+		private readonly string line;
 		private readonly Dictionary<TypeOfTag, int> currentOpenTags;
 		private readonly Dictionary<TypeOfTag, List<Segment>> segmentOfTags = 
 			new Dictionary<TypeOfTag, List<Segment>>
@@ -25,6 +26,7 @@ namespace Markdown
 
 		public ParserForUnderline(string line)
 		{
+			this.line = line;
 			usedChar = new bool[line.Length];
 			currentOpenTags = new Dictionary<TypeOfTag, int>();
 			foreach (var tag in Enum.GetNames(typeof(TypeOfTag)))
@@ -34,7 +36,7 @@ namespace Markdown
 			}
 		}		
 
-		private void UpdateStringByDoubleUnderline(string line)
+		private void UpdateStringByDoubleUnderline()
 		{
 			for (var i = 0; i < line.Length; i++)
 			{
@@ -53,7 +55,7 @@ namespace Markdown
 			}	
 		}
 
-		private void UpdateStringBySingleUnderline(string line)
+		private void UpdateStringBySingleUnderline()
 		{
 			for (var i = 0; i < line.Length; i++)
 			{
@@ -73,7 +75,7 @@ namespace Markdown
 			}
 		}
 
-		private void UpdateStringByShieldedUnderline(string line)
+		private void UpdateStringByShieldedUnderline()
 		{
 			for (var i = 0; i < line.Length; i++)
 			{
@@ -86,7 +88,7 @@ namespace Markdown
 		}
 
 		private bool IsTagOpenForCreateString(Dictionary<TypeOfTag, int> index, TypeOfTag tagEnum,
-			ref bool isStartSingleTags, ref int i, string line, StringBuilder parseLine)
+			ref bool isStartSingleTags, ref int i,  StringBuilder parseLine)
 		{
 			if (ValidatorForTags.IsTagContainDigit(line, 
 				segmentOfTags[tagEnum][index[tagEnum]]))
@@ -114,11 +116,11 @@ namespace Markdown
 			return true;
 		}
 
-		public string GetHtmlTextFromMdText(string line)
+		public string GetHtmlTextFromMdText()
 		{
-			UpdateStringByShieldedUnderline(line);
-			UpdateStringByDoubleUnderline(line);
-			UpdateStringBySingleUnderline(line);
+			UpdateStringByShieldedUnderline();
+			UpdateStringByDoubleUnderline();
+			UpdateStringBySingleUnderline();
 
 			var parseLine = new StringBuilder();
 			var index = new Dictionary<TypeOfTag, int>
@@ -145,7 +147,7 @@ namespace Markdown
 						{
 							isTagOpenOrClose = IsTagOpenForCreateString(index, tagEnum, 
 								ref isStartSingleTags,
-								ref i, line, parseLine);
+								ref i, parseLine);
 							break;
 						}
 						if (segmentOfTags[tagEnum][index[tagEnum]].EndIndex == i )
