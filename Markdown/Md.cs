@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.Text;
+using NUnit.Framework;
 using FluentAssertions;
 
 namespace Markdown
@@ -7,8 +9,24 @@ namespace Markdown
 	{
 		public string RenderToHtml(string markdown)
 		{
-			var parser = new ParserForUnderline(markdown);
-			return parser.GetHtmlTextFromMdText(markdown); 
+			var stringSeparators = new []{"<br>", "\n"};
+			var paragraphsOfMarkdown = markdown.Split(stringSeparators, 
+				StringSplitOptions.None);
+
+			var arrayOfParagraphs = new StringBuilder();
+			
+			for (var i = 0; i < paragraphsOfMarkdown.Length; i++)
+			{
+				var partOfMarkdown = paragraphsOfMarkdown[i];
+
+				var parser = new ParserForUnderline(partOfMarkdown);
+				arrayOfParagraphs.Append(parser.GetHtmlTextFromMdText(partOfMarkdown));
+
+				if (i < paragraphsOfMarkdown.Length - 1)
+					arrayOfParagraphs.Append("<br>");
+			}
+			
+			return arrayOfParagraphs.ToString(); 
 		}
 	}
 
@@ -41,6 +59,8 @@ namespace Markdown
 		[TestCase("\\_\\_", "__")]
 		[TestCase("_\\_\\__", "<em>__</em>")]
 		[TestCase("__непарные _символы", "__непарные _символы")]
+		[TestCase("__непарные _символы\n_a", "__непарные _символы<br>_a")]
+		[TestCase("_a", "_a")]
 		public void TestRenderToHtml_WithUnderline(string input, string output)
 		{
 			var md = new Md();
