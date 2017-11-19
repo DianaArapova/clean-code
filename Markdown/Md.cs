@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using FluentAssertions;
@@ -7,6 +10,28 @@ namespace Markdown
 {
 	public class Md
 	{
+		private IEnumerable<string> GetLinesFromFile(string fileWithMarkdown)
+		{
+			using (var fs = new StreamReader(fileWithMarkdown))
+			{
+				while (true)
+				{
+					var temp = fs.ReadLine();
+					if (temp == null) 
+						yield break;
+					yield return temp + '\n';
+				}
+			}
+		}
+
+		public string RenderToHtmlFromFile(string fileWithMarkdown)
+		{
+			return string.
+				Join(String.Empty, GetLinesFromFile(fileWithMarkdown).
+				Select(partOfMarkdown => new ParserForUnderline(partOfMarkdown).
+				GetHtmlTextFromMdText())).
+				Replace("\n", "<br>");
+		}
 		public string RenderToHtml(string markdown)
 		{
 			var stringSeparators = new []{"\n"};
@@ -62,10 +87,25 @@ namespace Markdown
 		[TestCase("__непарные _символы", "__непарные _символы")]
 		[TestCase("__непарные _символы\n_a", "__непарные _символы<br>_a")]
 		[TestCase("_a", "_a")]
-		public void TestRenderToHtml_WithUnderline(string input, string output)
+		public void TestRenderToHtml_CorrectHtmfFromUndeline(string input, string output)
 		{
 			var md = new Md();
 			md.RenderToHtml(input).Should().Be(output);
+		}
+
+		[Test]
+		public void TestRenderToHtmlFromFile_CorrectHtmfFromUndeline()
+		{
+			var md = new Md();
+			var nameOfFile = Directory.GetCurrentDirectory() + "1.txt";
+			var markdown = "__a__\n_a__\n__a_a_a__\n";
+			File.Create(Directory.GetCurrentDirectory() + "\\1.txt");
+			using (var fs = new StreamWriter(nameOfFile))
+			{
+				fs.Write(markdown);
+			}
+			md.RenderToHtmlFromFile(nameOfFile).Should().
+				Be(md.RenderToHtml(markdown));
 		}
 	}
 }
