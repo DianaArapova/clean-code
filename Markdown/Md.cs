@@ -10,27 +10,14 @@ namespace Markdown
 {
 	public class Md
 	{
-		private IEnumerable<string> GetLinesFromFile(string fileWithMarkdown)
-		{
-			using (var fs = new StreamReader(fileWithMarkdown))
-			{
-				while (true)
-				{
-					var temp = fs.ReadLine();
-					if (temp == null) 
-						yield break;
-					yield return temp;
-				}
-			}
-		}
-
 		public string RenderToHtmlFromFile(string fileWithMarkdown)
 		{
 			return string
-				.Join("<br>", GetLinesFromFile(fileWithMarkdown)
+				.Join("<br>", File.ReadLines(fileWithMarkdown)
 				.Select(partOfMarkdown => new ParserForUnderline(partOfMarkdown)
 				.GetHtmlTextFromMdText()));
 		}
+
 		public string RenderToHtml(string markdown)
 		{
 			var stringSeparators = new []{"\n"};
@@ -96,13 +83,10 @@ namespace Markdown
 		public void TestRenderToHtmlFromFile_CorrectHtmfFromUndeline()
 		{
 			var md = new Md();
-			var nameOfFile = Directory.GetCurrentDirectory() + "\\1.txt";
-			var markdown = "__a__\n_a__\n__a_a_a__\n";
+			var nameOfFile = Directory.GetCurrentDirectory() + "1.txt";
+			var markdown = "__a__\n_a__\n__a_a_a__";
 			File.Create(Directory.GetCurrentDirectory() + "\\1.txt");
-			using (var fs = new StreamWriter(nameOfFile))
-			{
-				fs.Write(markdown);
-			}
+			File.WriteAllText(nameOfFile, markdown);
 			md.RenderToHtmlFromFile(nameOfFile).Should().
 				Be(md.RenderToHtml(markdown));
 		}
