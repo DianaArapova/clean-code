@@ -19,18 +19,17 @@ namespace Markdown
 					var temp = fs.ReadLine();
 					if (temp == null) 
 						yield break;
-					yield return temp + '\n';
+					yield return temp;
 				}
 			}
 		}
 
 		public string RenderToHtmlFromFile(string fileWithMarkdown)
 		{
-			return string.
-				Join(String.Empty, GetLinesFromFile(fileWithMarkdown).
-				Select(partOfMarkdown => new ParserForUnderline(partOfMarkdown).
-				GetHtmlTextFromMdText())).
-				Replace("\n", "<br>");
+			return string
+				.Join("<br>", GetLinesFromFile(fileWithMarkdown)
+				.Select(partOfMarkdown => new ParserForUnderline(partOfMarkdown)
+				.GetHtmlTextFromMdText()));
 		}
 		public string RenderToHtml(string markdown)
 		{
